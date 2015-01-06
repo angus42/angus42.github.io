@@ -1,0 +1,103 @@
+﻿<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <script src="Scripts/jquery-2.1.3.min.js"></script>
+    <script src="Scripts/jquery-ui-1.11.2.min.js"></script>
+    <script src="Scripts/angular.min.js"></script>
+    <script src="Scripts/sortable.min.js"></script>
+    <script src="Scripts/spectrum.js"></script>
+    <script src="Scripts/angular-spectrum-colorpicker.min.js"></script>
+    <script src="Scripts/FileSaver.min.js"></script>
+
+    <script src="app.js"></script>
+    <link href="app.css" rel="stylesheet" />
+    <link href="Scripts/spectrum.css" rel="stylesheet" />
+    <link href="Content/themes/base/all.css" rel="stylesheet" />
+
+    <script>
+        $(function () {
+            $("#widthSpinner").spinner();
+            $("#heightSpinner").spinner();
+            $("#newSequenceDialog").dialog({
+                autoOpen: false,
+                hide: "puff",
+                show: "slide",
+                modal: true,
+                buttons: {
+                    Ok: function () {
+                        var weight = $("#widthSpinner")[0].value;
+                        var height = $("#heightSpinner")[0].value;
+                        $("#app").scope().newSequence(weight, height);
+                        $(this).dialog("close");
+                    },
+                    Cancel: function () {
+                        $(this).dialog("close");
+                    }
+                },
+            });
+    });
+    </script>
+
+</head>
+<body>
+    <div id="app" ng-app="myApp" ng-controller="Ctrl">
+        <h2>Dance Floor Sequencer</h2>
+
+        <div class="container">
+            <div class="step_role">
+                <div>
+                    <button ng-click="addStep()">Add</button>
+                    <button ng-click="copyStep()">Copy</button>
+                    <button ng-click="removeStep()">Remove</button>
+                    <button ng-click="togglePlayStop()">Play/Stop</button>
+                </div>
+                <ul ui-sortable ng-model="data.steps" class="list">
+                    <li ng-repeat="step in data.steps" class="item" ng-class="{'selected': step === selected_step}" ng-click="selectStep(step)">
+                        <table>
+                            <tbody>
+                                <tr ng-repeat="row in step.frame" style="height:1em">
+                                    <td ng-repeat="color in row" ng-click="setColor(this, row, $index)" ng-style="{'background-color': color.v}" style="width: 1em;border-color: #333" />
+                                </tr>
+                            </tbody>
+                        </table>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="center_stage">
+                <table ng-model="selected_step" class="item" style="height: 100%;width: 100%;">
+                    <tbody>
+                        <tr ng-repeat="row in selected_step.frame">
+                            <td ng-repeat="color in row" ng-click="setColor(this, row, $index)" ng-style="{'background-color': color.v}" style="border-color: #333" />
+                        </tr>
+                    </tbody>
+                </table>
+                <div>
+                    <button onclick="$('#newSequenceDialog').dialog('open');">New</button>
+                    <input style="height: 0px;width: 0px; overflow: hidden;" id="load" type="file" onchange="angular.element(this).scope().load(this)" />
+                    <button onclick="document.getElementById('load').click()">Load</button>
+                    <button ng-click="save()">Save</button>
+                    <button ng-click="exportToC()">Export to C</button>
+
+                    <input type="text" name="name" ng-model="data.name"
+                           ng-pattern="word" required ng-trim="true" />
+                </div>
+            </div>
+
+            <div class="color_palette">
+                <spectrum-colorpicker format="'hex'" ng-model="selected_color"></spectrum-colorpicker>
+                {{selected_color}}
+            </div>
+        </div>
+
+    </div>
+
+    <div id="newSequenceDialog" title="Start New Sequence">
+        Choose the size of the Dance Floor:
+        <label for="widthSpinner">Width:</label>
+        <input id="widthSpinner" name="value" value="5">
+        <label for="heightSpinner">Height:</label>
+        <input id="heightSpinner" name="value" value="5">
+    </div>
+</body>
+</html>
