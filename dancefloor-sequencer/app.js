@@ -1,4 +1,4 @@
-﻿angular.module('myApp', ['ui.sortable', 'angularSpectrumColorpicker'])
+﻿angular.module('myApp', ['ui.sortable'])
 .controller('Ctrl', ['$scope', '$interval',
       function($scope, $interval) {
     $scope.selected_step = null;
@@ -43,21 +43,24 @@
         reader.onload = function () {
             $scope.$apply(function ($scope) {
                 $scope.data = JSON.parse(reader.result);
+                $scope.selected_step = null;
             });
 
-            var selectionPalette = new Array();
+            var palette = new Array();
+            palette.push("#000");
+            palette.push("#fff");
             for (i = 0; i < $scope.data.steps.length; i++) {
                 var step = $scope.data.steps[i];
                 for (y = 0; y < step.frame.length; y++) {
                     for (x = 0; x < step.frame[y].length; x++) {
                         var color = step.frame[y][x].v;
-                        if (selectionPalette.indexOf(color) < 0)
-                            selectionPalette.push(color);
+                        if (palette.indexOf(color) < 0)
+                            palette.push(color);
                     }
                 }
             }
 
-            initColorPicker("#colorpicker", selectionPalette);
+            $("#colorpicker").spectrum("option", "palette", palette);
         };
         reader.readAsText(element.files[0]);
     };
@@ -69,7 +72,9 @@
 
     $scope.exportToC = function () {
         var firstFrame = $scope.data.steps[0].frame;
-        var content = "const byte " + $scope.data.name + "[][" + firstFrame.length * firstFrame[0].length  + "][3] = {\r\n";
+
+        var content = "#include \"Config.h\"\r\n\r\n";
+        content += "static sequence_t " + $scope.data.name + " = {\r\n";
         for (i = 0; i < $scope.data.steps.length; i++)
         {
             if (i > 0)
@@ -88,7 +93,7 @@
             }
             content += "}";
         }
-        content += "\r\n};";
+        content += "\r\n};\r\n";
 
         var blob = new Blob([content], { type: "text/plain;charset=utf-8" });
         saveAs(blob, $scope.data.name + ".h");
@@ -181,18 +186,4 @@ function hexToRgb(hex) {
         g: parseInt(result[2], 16),
         b: parseInt(result[3], 16)
     } : null;
-}
-
-function initColorPicker(selector, selectionPalette) {
-    $(selector).spectrum({
-        flat: true,
-        showPaletteOnly: true,
-        togglePaletteOnly: true,
-        showButtons: false,
-        showInput: true,
-        preferredFormat: "rgb",
-        palette: [["white", "black"]],
-        color: "white",
-        selectionPalette: selectionPalette
-    });
 }
